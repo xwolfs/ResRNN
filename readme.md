@@ -12,8 +12,23 @@ Two RNN modules are deployed for temporal dynamic modeling and spatial context m
 
 ![Spatial RNN](https://github.com/xwolfs/ResRNN/blob/master/SRNN.pdf)
 
-### ON Circle-RNN
+### ON implementation of Circle-RNN
 
-In 'caffe.proto', add the following line to 'message RecurrentParameter'
+To implement Circle-RNN,the following modifications to the caffe toolbox are required:
+1. add 'circle_lstm_layer.hpp' to '/caffe/include/caffe/layers', add 'circle_lstm_layer.cpp' to '/caffe/src/caffe/layers';
+2. In 'caffe.proto', add the following line to 'message RecurrentParameter'
+    'optional uint32 depth = 6 [default = 0];'
+Note: LSTM units is employed in Circle-RNN.
 
-   'optional uint32 depth = 6 [default = 0];'
+#### Example of Circle-RNN 
+'layer {  name: "lstm1"  type: "CircleLSTM"  bottom: "ip1_permute"   bottom: "clip_permute"   top: "wt_lstm1"
+  recurrent_param { num_output: 6   depth: 0
+    weight_filler { type: "uniform"    min: -0.05    max: 0.05 } 
+    bias_filler {   type: "constant"   value: 0    }
+  }
+}
+'
+The parameters *depth* indicates how many rounds the RNN network is unrolled. 
+* *depth=0* : the number of rounds equals the number of time steps of the sequences.
+* *depth=1* : the RNN network is unrolled once. This is equivalent to the original RNN in caffe with LSTM unit;
+

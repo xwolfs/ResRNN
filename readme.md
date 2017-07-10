@@ -46,12 +46,16 @@ layer {
       min: -0.05
       max: 0.05
     }
+    
   bias_filler {
       type: "constant"
       value: 0
     }
+    
   depth: 0
+  
   }
+  
 }
 '''
 

@@ -21,10 +21,25 @@ To implement Circle-RNN,the following modifications to the caffe toolbox are req
 Note: LSTM units is employed in Circle-RNN.
 
 #### Example of Circle-RNN 
-'layer {  name: "lstm1"  type: "CircleLSTM"  bottom: "ip1_permute"   bottom: "clip_permute"   top: "wt_lstm1"
-  recurrent_param { num_output: 6   depth: 0
-    weight_filler { type: "uniform"    min: -0.05    max: 0.05 } 
-    bias_filler {   type: "constant"   value: 0    }
+'
+layer {
+  name: "lstm1"
+  type: "CircleLSTM"
+  bottom: "ip1_permute"
+  bottom: "clip_permute"
+  top: "wt_lstm1"
+  recurrent_param {
+    num_output: 6
+    weight_filler {
+      type: "uniform"
+      min: -0.05
+      max: 0.05
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    depth: 0
   }
 }
 '

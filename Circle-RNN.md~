@@ -1,5 +1,0 @@
-
-
-In caffe.proto, add the following line to message RecurrentParameter {}
-
-optional uint32 depth = 6 [default = 0];

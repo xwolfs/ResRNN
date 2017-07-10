@@ -17,7 +17,8 @@ Two RNN modules are deployed for temporal dynamic modeling and spatial context m
 To implement Circle-RNN,the following modifications to the caffe toolbox are required:
 1. add 'circle_lstm_layer.hpp' to '/caffe/include/caffe/layers', add 'circle_lstm_layer.cpp' to '/caffe/src/caffe/layers';
 
-2. In *caffe.proto*, add the following line to `message RecurrentParameter`
+2. In *caffe.proto*, add the following line to `message RecurrentParameter`:
+
     `optional uint32 depth = 6 [default = 0];`
 
 Note: LSTM units is employed in Circle-RNN.

@@ -6,11 +6,14 @@ Xue W., Nachum I.B., Pandey S., Warrington J., Leung S., Li S. (2017) Direct Est
 
 https://link.springer.com/chapter/10.1007/978-3-319-59050-9_40 or https://arxiv.org/pdf/1705.09728.pdf
 
+Two RNN modules are deployed for temporal dynamic modeling and spatial context modeling.
 
-![Temporal RNN](https://github/xwolfs/ResRNN/TRNN.pdf)
+![Temporal RNN](https://github.com/xwolfs/ResRNN/blob/master/TRNN.pdf)
+
+![Spatial RNN](https://github.com/xwolfs/ResRNN/blob/master/SRNN.pdf)
 
 ### ON Circle-RNN
 
-In caffe.proto, add the following line to message RecurrentParameter {}
+In 'caffe.proto', add the following line to 'message RecurrentParameter'
 
-optional uint32 depth = 6 [default = 0];
+   'optional uint32 depth = 6 [default = 0];'

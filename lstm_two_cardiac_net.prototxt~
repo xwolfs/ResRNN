@@ -1,0 +1,148 @@
+name: "lstm_two_cardiac_net"
+layer {name: "data-img"  type: "ImageData" top: "data" top: "clip"
+      image_data_param {source: "lstm_image_data/train_imglist_5fold3.txt"
+                        batch_size: 40  is_color: false}
+      transform_param {mirror: 1 crop_size: 75 mean_value:85  }
+      include: { phase: TRAIN }
+}
+
+layer {name: "data-img"  type: "ImageData" top: "data" top: "clip"
+      image_data_param {source: "lstm_image_data/test_imglist_5fold3.txt"
+                        batch_size: 580  is_color: false}
+      transform_param {mirror: 1 crop_size: 75 mean_value:85  }
+      include: { phase: TEST }
+}
+
+
+layer {   name: "data-label"  type: "HDF5Data"  top: "label"  
+  hdf5_data_param {     source: "train_file_location.txt"     batch_size: 40  } 
+  include: { phase: TRAIN }
+}
+
+layer {   name: "data-label"  type: "HDF5Data"  top: "label"  
+  hdf5_data_param {    source: "test_file_location.txt"    batch_size: 580  }
+  include: { phase: TEST }
+}
+
+# conv1
+layer {  name: "conv1"   type: "Convolution"  bottom: "data"  top: "conv1"
+  param {    lr_mult: 1  }  param {    lr_mult: 2  }
+  convolution_param {    num_output: 32    kernel_size: 5    stride: 1
+    weight_filler {      type: "gaussian"      std: 0.01    }
+    bias_filler {      type: "constant"      value: 0    }
+  }
+}
+layer {  name: "relu1"  type: "ReLU"  bottom: "conv1"  top: "conv1"}
+layer {  name: "pool1"  type: "Pooling"  bottom: "conv1"  top: "pool1"
+  pooling_param {    pool: MAX    kernel_size: 5    stride: 2  }
+}
+
+# conv2
+layer {  name: "conv2"  type: "Convolution"  bottom: "pool1"  top: "conv2"
+  param {    lr_mult: 1  }  param {    lr_mult: 2  }
+  convolution_param {    num_output: 32    kernel_size: 5    stride: 1
+    weight_filler {      type: "gaussian"      std: 0.01    }
+    bias_filler {      type: "constant"      value: 0    }
+  }
+}
+layer {  name: "relu2"  type: "ReLU"  bottom: "conv2"  top: "conv2"}
+layer {  name: "pool2"  type: "Pooling"  bottom: "conv2"  top: "pool2"
+  pooling_param {    pool: MAX    kernel_size: 5    stride: 2  }
+}
+
+# conv3 
+layer {  name: "conv3"  type: "Convolution"  bottom: "pool2"  top: "conv3"
+  param {    lr_mult: 1  }  param {    lr_mult: 2  }
+  convolution_param {    num_output: 64    kernel_size: 5    stride: 1
+    weight_filler {      type: "gaussian"      std: 0.01    }
+    bias_filler {      type: "constant"      value: 0    }
+  }
+}
+layer {  name: "relu3"  type: "ReLU"  bottom: "conv3"  top: "conv3"}
+layer {  name: "pool3"  type: "Pooling"  bottom: "conv3"  top: "pool3"
+  pooling_param {    pool: MAX   kernel_size: 5    stride: 2  }
+}
+
+layer {  name: "ip1"  type: "InnerProduct"  bottom: "pool3"  top: "ip1"
+  param {    lr_mult: 1  }  param {    lr_mult: 2  }
+  inner_product_param {    num_output: 1000
+    weight_filler {      type: "gaussian"      std: 0.01    }
+    bias_filler {      type: "constant"      value: 0    }
+  }
+}
+layer {  name: "relu4"  type: "ReLU"  bottom: "ip1"  top: "ip1"}
+layer {  name: "drop3"  type: "Dropout"  bottom: "ip1"  top: "ip1"
+  dropout_param {  dropout_ratio: 0.5  }   }
+
+layer {  name: "reshape_ip1" type: "Reshape" bottom: "ip1" top: "ip1_reshape"
+    reshape_param {  shape { dim: -1  dim: 20 dim: 1000 }    } 
+} # 0: copy the dimension from below ; -1: infer it from the other dimensions
+layer {  name: "permute_ip1" type: "Permute" bottom: "ip1_reshape" top: "ip1_permute"
+    permute_param { order: 1 order: 0 order: 2}
+}
+
+layer {  name: "reshape_clip" type: "Reshape" bottom: "clip" top: "clip_reshape"
+    reshape_param {  shape { dim: -1  dim: 20}    } 
+}
+layer {  name: "permute_clip" type: "Permute" bottom: "clip_reshape" top: "clip_permute"
+    permute_param { order: 1 order: 0}
+}
+
+
+# lstm1: Temporal RNN
+layer {  name: "lstm1"  type: "CircleLSTM"  bottom: "ip1_permute"   bottom: "clip_permute"   top: "wt_lstm1"
+  recurrent_param { num_output: 6   depth: 0
+    weight_filler { type: "uniform"    min: -0.05    max: 0.05 } 
+    bias_filler {   type: "constant"   value: 0    }
+  }
+}
+
+layer {  name: "slice_clip" type: "Slice" bottom: "clip_permute" top: "clip_slice1" top: "clip_slice2"
+    slice_param {axis: 0 slice_point: 6} }
+layer {  name: "silence" type: "Silence" bottom: "clip_slice2"}
+
+# Rearrangement data for lstm2
+layer {  name: "permute_wt" type: "Permute" bottom: "wt_lstm1" top: "wt_permute"
+    permute_param { order: 2 order:1 order: 0} }
+
+# lstm2: Spatial RNN
+layer {  name: "lstm2"  type: "CircleLSTM"  bottom: "wt_permute"   bottom: "clip_slice1"   top: "wt_lstm2"
+  recurrent_param { num_output: 20    depth: 0
+    weight_filler { type: "uniform"    min: -0.05    max: 0.05  } 
+		    
+    bias_filler {   type: "constant"   value: 0    }
+  }
+}
+layer {  name: "permute_lstm2" type: "Permute" bottom: "wt_lstm2" top: "wt_lstm2_permute"
+    permute_param { order: 1 order:2 order: 0} }
+
+# RWT residual estimation from the RNN path
+layer {  name: "reshape_lstm2" type: "Reshape" bottom: "wt_lstm2_permute" top: "wt_reshape"
+    reshape_param {  shape { dim: -1  dim: 6}    } }
+
+# RWT preliminary estimation from the CNN path 
+layer {  name: "ip2"  type: "InnerProduct"  bottom: "ip1"  top: "ip2"
+  param {    lr_mult: 1  }  param {    lr_mult: 2  }
+  inner_product_param {    num_output: 6
+    weight_filler {      type: "gaussian"      std: 0.01    }
+    bias_filler {      type: "constant"      value: 0    }
+  }
+}
+
+
+# adjust the scale of the output from RNN path, can be ignored.
+layer {  name: "scale"  type: "Scale"  bottom: "wt_reshape"  top: "ip3"
+  param { lr_mult: 1 }   
+  scale_param { filler {type: "constant"   value: 0.01    }  }
+}
+
+# Final estimation of RWT given by Preliminary estimation + Residual Estimation
+layer { name: "sum"  type:"Eltwise"  bottom: "ip2" bottom: "ip3" top: "wt_sum"
+        eltwise_param {operation: SUM}  }
+
+# reg-loss
+layer {  name: "reg_loss"  type: "EuclideanLoss"  bottom: "wt_sum"  bottom: "label"  top: "loss" loss_weight: 1 }
+
+
+
+

@@ -1,0 +1,1 @@
+lstm_image_data/cmrmid145_test_5fold1.hdf5

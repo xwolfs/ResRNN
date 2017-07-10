@@ -6,6 +6,9 @@ Xue W., Nachum I.B., Pandey S., Warrington J., Leung S., Li S. (2017) Direct Est
 
 https://link.springer.com/chapter/10.1007/978-3-319-59050-9_40 or https://arxiv.org/pdf/1705.09728.pdf
 
+
+![Temporal RNN](https://github/xwolfs/ResRNN/TRNN.pdf)
+
 ### ON Circle-RNN
 
 In caffe.proto, add the following line to message RecurrentParameter {}
